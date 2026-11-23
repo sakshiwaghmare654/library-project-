@@ -1,0 +1,115 @@
+import json
+import os
+from datetime import datetime
+
+DATA_FILE = "library_data.json"
+
+
+def load_data():
+    if not os.path.exists(DATA_FILE):
+        return [
+            {"id": 1, "title": "Python Crash Course", "author": "Eric Matthes", "issued_to": None},
+            {"id": 2, "title": "Clean Code", "author": "Robert C. Martin", "issued_to": None},
+            {"id": 3, "title": "Database Systems", "author": "Silberschatz", "issued_to": None},
+        ]
+    with open(DATA_FILE, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+def save_data(books):
+    with open(DATA_FILE, "w", encoding="utf-8") as f:
+        json.dump(books, f, indent=2)
+
+
+def view_books(books):
+    if not books:
+        print("No books found.")
+        return
+    print("\n--- Library Books ---")
+    for b in books:
+        status = f"Issued to {b['issued_to']}" if b["issued_to"] else "Available"
+        print(f"ID: {b['id']} | {b['title']} ({b['author']}) -> {status}")
+
+
+def add_book(books):
+    title = input("Enter book title: ").strip()
+    author = input("Enter author name: ").strip()
+    if not title or not author:
+        print("Title and author cannot be empty.")
+        return
+    next_id = max([b["id"] for b in books], default=0) + 1
+    books.append({"id": next_id, "title": title, "author": author, "issued_to": None})
+    save_data(books)
+    print(f"Book added successfully! (ID: {next_id})")
+
+
+def issue_book(books):
+    try:
+        book_id = int(input("Enter Book ID to issue: ").strip())
+    except ValueError:
+        print("Please enter a valid numeric Book ID.")
+        return
+
+    for b in books:
+        if b["id"] == book_id:
+            if b["issued_to"]:
+                print(f"Book is already issued to {b['issued_to']}.")
+                return
+            student_name = input("Enter student name: ").strip()
+            if not student_name:
+                print("Student name cannot be empty.")
+                return
+            b["issued_to"] = f"{student_name} ({datetime.now().strftime('%Y-%m-%d')})"
+            save_data(books)
+            print("Book issued successfully!")
+            return
+    print("Book ID not found.")
+
+
+def return_book(books):
+    try:
+        book_id = int(input("Enter Book ID to return: ").strip())
+    except ValueError:
+        print("Please enter a valid numeric Book ID.")
+        return
+
+    for b in books:
+        if b["id"] == book_id:
+            if not b["issued_to"]:
+                print("This book is already available in the library.")
+                return
+            b["issued_to"] = None
+            save_data(books)
+            print("Book returned successfully!")
+            return
+    print("Book ID not found.")
+
+
+def main():
+    books = load_data()
+    while True:
+        print("\n=== EASY LIBRARY BOOK TRACKER ===")
+        print("1. View All Books")
+        print("2. Add New Book")
+        print("3. Issue Book to Student")
+        print("4. Return Book")
+        print("5. Exit")
+
+        choice = input("Choose an option (1-5): ").strip()
+        if choice == "1":
+            view_books(books)
+        elif choice == "2":
+            add_book(books)
+        elif choice == "3":
+            issue_book(books)
+        elif choice == "4":
+            return_book(books)
+        elif choice == "5":
+            print("Exiting Library Tracker. Bye!")
+            break
+        else:
+            print("Invalid option. Enter 1 to 5.")
+
+
+if __name__ == "__main__":
+    main()
